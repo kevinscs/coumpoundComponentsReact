@@ -1,6 +1,5 @@
-// Coumpound Components
-
-import { Children, cloneElement, useState } from "react";
+// Compound Components
+import { Children, cloneElement, createContext, useContext, useState } from 'react';
 
 const s = {
   style: {
@@ -8,42 +7,50 @@ const s = {
   },
 };
 
+const TurnOnOffContext = createContext();
+
 const TurnOnOff = ({ children }) => {
-  const [ isOn, setIsOn ] = useState(false);
-  const onTurn = () => setIsOn(s => !s);
+  const [isOn, setIsOn] = useState(false);
+  const onTurn = () => setIsOn((s) => !s);
 
-  return Children.map(children, child => {
-    const newChild = cloneElement(child, {
-      isOn,
-      onTurn,
-    });
-    return newChild;
-  });
+  return <TurnOnOffContext.Provider value={{ isOn, onTurn }}>{children}</TurnOnOffContext.Provider>;
 };
-
-const TurnedOn = ({ isOn, children }) => {
+const TurnedOn = ({ children }) => {
+  const { isOn } = useContext(TurnOnOffContext);
   return isOn ? children : null;
 };
-
-const TurnedOff = ({ isOn, children }) => {
+const TurnedOff = ({ children }) => {
+  const { isOn } = useContext(TurnOnOffContext);
   return isOn ? null : children;
 };
-
-const TurndButton = ({ isOn, onTurn, ...props}) => {
-  return <button onClick={onTurn} {...props}>Turn {isOn ? 'OFF' : 'ON'}</button>;
-};
-
-const P = ({ children }) => {
-  return <p{ ...s }>{children}</p>
-};
-
-const Home = () => {
+const TurnButton = ({ ...props }) => {
+  const { isOn, onTurn } = useContext(TurnOnOffContext);
 
   return (
+    <button onClick={onTurn} {...props}>
+      Turn {isOn ? 'OFF' : 'ON'}
+    </button>
+  );
+};
+const P = ({ children }) => <p {...s}>{children}</p>;
+
+export const Home = () => {
+  return (
     <TurnOnOff>
-      <TurnedOn><P>Aqui as coisa que vão acontecer quando estiver On</P></TurnedOn>
-      <TurnedOff><P>Aqui vêm as coisas do Off</P></TurnedOff>
-      <TurndButton { ...s } />
+      <div>
+        <header>
+          {' '}
+          <TurnedOff>
+            <P>Aqui vem as coisas do OFF.</P>
+          </TurnedOff>
+        </header>
+        <section>
+          <TurnedOn>
+            <P>Aqui as coisas que vão acontecer quando estiver ON.</P>
+          </TurnedOn>
+        </section>
+      </div>
+      <TurnButton {...s} />
     </TurnOnOff>
   );
 };
